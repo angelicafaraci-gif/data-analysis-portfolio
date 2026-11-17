@@ -1,0 +1,209 @@
+
+> library(Hmisc)
+
+Attaching package: 'Hmisc'
+
+The following objects are masked from 'package:base':
+
+    format.pval, units
+
+
+> source("../plot_helpers.R")
+
+> lakes <- read.csv("data/lakes_conductivity_ions.csv")
+
+> shapiro.test(lakes$conductivity)
+
+	Shapiro-Wilk normality test
+
+data:  lakes$conductivity
+W = 0.93087, p-value = 0.2012
+
+
+> shapiro.test(lakes$ion_concentration)
+
+	Shapiro-Wilk normality test
+
+data:  lakes$ion_concentration
+W = 0.9586, p-value = 0.5748
+
+
+> cor.test(lakes$conductivity, lakes$ion_concentration, 
++     method = "pearson")
+
+	Pearson's product-moment correlation
+
+data:  lakes$conductivity and lakes$ion_concentration
+t = 12.641, df = 16, p-value = 9.651e-10
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.8768201 0.9828098
+sample estimates:
+      cor 
+0.9534038 
+
+
+> cor.test(lakes$conductivity, lakes$ion_concentration, 
++     method = "spearman", exact = FALSE)
+
+	Spearman's rank correlation rho
+
+data:  lakes$conductivity and lakes$ion_concentration
+S = 82.25, p-value = 1.035e-07
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+      rho 
+0.9151183 
+
+
+> cor.test(lakes$conductivity, lakes$ion_concentration, 
++     method = "kendall", exact = FALSE)
+
+	Kendall's rank correlation tau
+
+data:  lakes$conductivity and lakes$ion_concentration
+z = 4.527, p-value = 5.983e-06
+alternative hypothesis: true tau is not equal to 0
+sample estimates:
+     tau 
+0.793492 
+
+
+> r <- cor(lakes$conductivity, lakes$ion_concentration)
+
+> open_png("figures/lakes_conductivity_ions.png")
+
+> plot(ion_concentration ~ conductivity, data = lakes, 
++     type = "n", xlab = expression("Conductivity (" * mu * "S/cm)"), 
++     ylab = "Ion concentration (meq/L)", main = "Conductivity vs ion concentration in 18 lakes")
+
+> hgrid()
+
+> points(ion_concentration ~ conductivity, data = lakes, 
++     pch = 21, bg = PAL["blue"], col = "white", cex = 1.4)
+
+> legend("topleft", legend = sprintf("Pearson r = %.2f, P < 0.001", 
++     r), bty = "n", text.col = INK)
+
+> dev.off()
+null device 
+          1 
+
+> sediments <- read.csv("data/sediment_metals_mg_kg.csv")
+
+> metals <- sediments[, c("Cr", "Cu", "Ni", "Zn", "Pb", 
++     "Hg")]
+
+> summary(metals)
+       Cr               Cu              Ni              Zn        
+ Min.   : 49.82   Min.   :20.20   Min.   :30.62   Min.   : 40.66  
+ 1st Qu.: 74.28   1st Qu.:30.88   1st Qu.:38.27   1st Qu.: 75.18  
+ Median : 87.55   Median :35.44   Median :48.94   Median : 90.33  
+ Mean   : 95.89   Mean   :45.42   Mean   :48.02   Mean   :128.28  
+ 3rd Qu.:113.14   3rd Qu.:56.57   3rd Qu.:54.33   3rd Qu.:171.16  
+ Max.   :194.79   Max.   :95.06   Max.   :72.16   Max.   :341.30  
+       Pb              Hg        
+ Min.   : 5.49   Min.   : 0.220  
+ 1st Qu.: 9.05   1st Qu.: 0.350  
+ Median :11.45   Median : 0.805  
+ Mean   :13.60   Mean   : 2.856  
+ 3rd Qu.:15.66   3rd Qu.: 2.565  
+ Max.   :38.88   Max.   :15.330  
+
+> pairs(metals, pch = 16, col = adjustcolor(INK2, 0.6))
+
+> res <- rcorr(as.matrix(metals), type = "spearman")
+
+> round(res$r, 2)
+     Cr   Cu   Ni   Zn   Pb   Hg
+Cr 1.00 0.71 0.66 0.75 0.51 0.63
+Cu 0.71 1.00 0.61 0.84 0.29 0.68
+Ni 0.66 0.61 1.00 0.71 0.39 0.41
+Zn 0.75 0.84 0.71 1.00 0.33 0.74
+Pb 0.51 0.29 0.39 0.33 1.00 0.14
+Hg 0.63 0.68 0.41 0.74 0.14 1.00
+
+> p_holm <- res$P
+
+> p_holm[upper.tri(p_holm)] <- p.adjust(res$P[upper.tri(res$P)], 
++     method = "holm")
+
+> p_holm[lower.tri(p_holm)] <- t(p_holm)[lower.tri(p_holm)]
+
+> signif(p_holm, 2)
+        Cr      Cu      Ni      Zn     Pb      Hg
+Cr      NA 1.3e-05 8.8e-05 2.2e-06 0.0089 3.0e-04
+Cu 1.3e-05      NA 4.8e-04 2.9e-09 0.1700 5.5e-05
+Ni 8.8e-05 4.8e-04      NA 1.6e-05 0.0710 6.0e-02
+Zn 2.2e-06 2.9e-09 1.6e-05      NA 0.1500 4.2e-06
+Pb 8.9e-03 1.7e-01 7.1e-02 1.5e-01     NA 4.1e-01
+Hg 3.0e-04 5.5e-05 6.0e-02 4.2e-06 0.4100      NA
+
+> round(cor(metals, method = "pearson"), 2)
+     Cr   Cu   Ni   Zn   Pb   Hg
+Cr 1.00 0.73 0.62 0.73 0.30 0.56
+Cu 0.73 1.00 0.52 0.88 0.19 0.81
+Ni 0.62 0.52 1.00 0.51 0.35 0.26
+Zn 0.73 0.88 0.51 1.00 0.19 0.83
+Pb 0.30 0.19 0.35 0.19 1.00 0.09
+Hg 0.56 0.81 0.26 0.83 0.09 1.00
+
+> dir.create("results", showWarnings = FALSE)
+
+> write.csv(round(res$r, 3), "results/spearman_rho.csv")
+
+> write.csv(signif(p_holm, 3), "results/spearman_p_holm.csv")
+
+> ramp <- colorRampPalette(c("#e34948", "#f0efec", "#2a78d6"))(201)
+
+> rho <- res$r
+
+> k <- ncol(rho)
+
+> open_png("figures/metals_correlation_matrix.png", 
++     width = 1500, height = 1400)
+
+> par(mar = c(3.2, 3.6, 3.2, 6))
+
+> rho_plot <- rho
+
+> diag(rho_plot) <- NA
+
+> image(1:k, 1:k, t(rho_plot[k:1, ]), zlim = c(-1, 1), 
++     col = ramp, axes = FALSE, xlab = "", ylab = "", main = "Heavy metals in sediments: Spearman's rho")
+
+> rect(1:k - 0.5, k:1 - 0.5, 1:k + 0.5, k:1 + 0.5, col = GRID, 
++     border = NA)
+
+> axis(1, at = 1:k, labels = colnames(rho), lwd = 0)
+
+> axis(2, at = 1:k, labels = rev(rownames(rho)), lwd = 0)
+
+> abline(h = 0.5 + 0:k, v = 0.5 + 0:k, col = "white", 
++     lwd = 2)
+
+> for (i in 1:k) for (j in 1:k) {
++     if (i != j) {
++         star <- ifelse(p_holm[i, j] < 0.05, "*", "")
++         text(j, k + 1 - i, paste0(sprintf("%.2f", rho[i, j]), 
++             star), cex = 0.85, col = ifelse(abs(rho[i, j]) > 
++             0.6, "white", INK))
++     }
++ }
+
+> par(xpd = TRUE)
+
+> yk <- seq(0.5, k + 0.5, length.out = 202)
+
+> rect(k + 0.8, yk[-202], k + 1.1, yk[-1], col = ramp, 
++     border = NA)
+
+> text(k + 1.25, c(0.5, (k + 1)/2, k + 0.5), c("-1", 
++     "0", "+1"), adj = 0, cex = 0.8, col = INK2)
+
+> mtext("* Holm-adjusted P < 0.05", side = 1, line = 1.8, 
++     cex = 0.75, col = INK2)
+
+> dev.off()
+pdf 
+  2 

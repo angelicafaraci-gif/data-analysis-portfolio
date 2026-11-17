@@ -1,0 +1,184 @@
+
+> source("../plot_helpers.R")
+
+> se <- function(x) sd(x)/sqrt(length(x))
+
+> iron <- read.csv("data/iron_in_air.csv", stringsAsFactors = TRUE)
+
+> str(iron)
+'data.frame':	15 obs. of  2 variables:
+ $ zone       : Factor w/ 3 levels "A","B","C": 1 1 1 1 1 1 2 2 2 2 ...
+ $ iron_ug_Nm3: num  2.71 2.06 2.84 2.97 2.55 2.78 1.75 2.19 2.09 2.75 ...
+
+> tapply(iron$iron_ug_Nm3, iron$zone, mean)
+       A        B        C 
+2.651667 2.195000 2.496000 
+
+> tapply(iron$iron_ug_Nm3, iron$zone, se)
+         A          B          C 
+0.13128637 0.20758532 0.08795453 
+
+> bartlett.test(iron_ug_Nm3 ~ zone, data = iron)
+
+	Bartlett test of homogeneity of variances
+
+data:  iron_ug_Nm3 by zone
+Bartlett's K-squared = 1.6895, df = 2, p-value = 0.4297
+
+
+> m_iron <- lm(iron_ug_Nm3 ~ zone, data = iron)
+
+> anova(m_iron)
+Analysis of Variance Table
+
+Response: iron_ug_Nm3
+          Df  Sum Sq  Mean Sq F value Pr(>F)
+zone       2 0.50294 0.251468  2.5382 0.1204
+Residuals 12 1.18890 0.099075               
+
+> open_png("figures/iron_by_zone.png")
+
+> box_points(iron_ug_Nm3 ~ zone, iron, col = PAL["blue"], 
++     xlab = "Zone", ylab = expression("Iron (" * mu * "g N" * 
++         m^-3 * ")"), main = "Iron in air by zone")
+
+> dev.off()
+null device 
+          1 
+
+> turf <- read.csv("data/algal_turf_sites.csv", stringsAsFactors = TRUE)
+
+> str(turf)
+'data.frame':	120 obs. of  3 variables:
+ $ site          : Factor w/ 12 levels "S01","S02","S03",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ replicate     : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ algal_turf_pct: num  31.66 31.59 5.62 61.2 46.24 ...
+
+> bartlett.test(algal_turf_pct ~ site, data = turf)
+
+	Bartlett test of homogeneity of variances
+
+data:  algal_turf_pct by site
+Bartlett's K-squared = 41.846, df = 11, p-value = 1.722e-05
+
+
+> turf$sqrt_turf <- sqrt(turf$algal_turf_pct)
+
+> bartlett.test(sqrt_turf ~ site, data = turf)
+
+	Bartlett test of homogeneity of variances
+
+data:  sqrt_turf by site
+Bartlett's K-squared = 14.952, df = 11, p-value = 0.1847
+
+
+> m_turf <- lm(sqrt_turf ~ site, data = turf)
+
+> tab_turf <- anova(m_turf)
+
+> tab_turf
+Analysis of Variance Table
+
+Response: sqrt_turf
+           Df Sum Sq Mean Sq F value    Pr(>F)    
+site       11 209.71 19.0645  9.2452 1.725e-11 ***
+Residuals 108 222.71  2.0621                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+> n_per_site <- 10
+
+> var_site <- (tab_turf["site", "Mean Sq"] - tab_turf["Residuals", 
++     "Mean Sq"])/n_per_site
+
+> var_resid <- tab_turf["Residuals", "Mean Sq"]
+
+> round(100 * var_site/(var_site + var_resid), 1)
+[1] 45.2
+
+> open_png("figures/algal_turf_raw_vs_sqrt.png", width = 2200, 
++     height = 1100)
+
+> par(mfrow = c(1, 2), mar = c(5.2, 4.8, 2.8, 1))
+
+> box_points(algal_turf_pct ~ site, turf, xlab = "", 
++     ylab = "Algal turf cover (%)", main = "Raw data", cex.names = 0.75, 
++     las.names = 2)
+
+> mtext("Site", side = 1, line = 3.9, col = INK)
+
+> box_points(sqrt_turf ~ site, turf, col = PAL["aqua"], 
++     xlab = "", ylab = "sqrt(cover)", main = "Square-root transformed", 
++     cex.names = 0.75, las.names = 2)
+
+> mtext("Site", side = 1, line = 3.9, col = INK)
+
+> dev.off()
+null device 
+          1 
+
+> algae <- read.csv("data/algal_growth_light.csv", stringsAsFactors = TRUE)
+
+> bartlett.test(growth_pct ~ light, data = algae)
+
+	Bartlett test of homogeneity of variances
+
+data:  growth_pct by light
+Bartlett's K-squared = 1.6967, df = 2, p-value = 0.4281
+
+
+> m_algae <- aov(growth_pct ~ light, data = algae)
+
+> summary(m_algae)
+            Df  Sum Sq  Mean Sq F value Pr(>F)  
+light        2 0.00885 0.004425   6.453 0.0258 *
+Residuals    7 0.00480 0.000686                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+> TukeyHSD(m_algae)
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = growth_pct ~ light, data = algae)
+
+$light
+     diff          lwr          upr     p adj
+B-A  0.06  0.001098832  0.118901168 0.0464004
+C-A -0.01 -0.068901168  0.048901168 0.8736275
+C-B -0.07 -0.132967997 -0.007032003 0.0320905
+
+
+> means <- tapply(algae$growth_pct, algae$light, mean)
+
+> errs <- tapply(algae$growth_pct, algae$light, se)
+
+> open_png("figures/algal_growth_by_light.png")
+
+> par(mar = c(5.6, 4.8, 2.8, 1.2))
+
+> x <- barplot(means, ylim = c(0, 0.4), col = adjustcolor(PAL["blue"], 
++     0.85), border = NA, space = 1, axes = FALSE, xlab = "Lamp", 
++     ylab = "Growth (%)", main = expression("Algal growth by type of light (mean" %+-% 
++         "SE)"))
+
+> hgrid()
+
+> barplot(means, add = TRUE, col = adjustcolor(PAL["blue"], 
++     0.85), border = NA, space = 1, axes = FALSE, names.arg = rep("", 
++     3))
+
+> axis(2)
+
+> arrows(x, means - errs, x, means + errs, angle = 90, 
++     code = 3, length = 0.05, col = INK, lwd = 1.2)
+
+> text(x, means + errs + 0.02, labels = c("a", "b", 
++     "a"), col = INK)
+
+> mtext(expression("Lamps sharing a letter do not differ (Tukey HSD, " * 
++     alpha * " = 0.05)"), side = 1, line = 4.4, cex = 0.75, col = INK2)
+
+> dev.off()
+null device 
+          1 

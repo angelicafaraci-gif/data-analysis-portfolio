@@ -1,0 +1,388 @@
+
+> library(GAD)
+
+> source("../plot_helpers.R")
+
+> eggs <- read.csv("data/limpet_eggs_season_density.csv", 
++     stringsAsFactors = TRUE)
+
+> eggs$density <- factor(eggs$density, levels = c(8, 
++     15, 30, 45))
+
+> eggs$season <- as.fixed(eggs$season)
+
+> eggs$density <- as.fixed(eggs$density)
+
+> m_eggs <- lm(egg_masses ~ season + density + season:density, 
++     data = eggs)
+
+> estimates(m_eggs)
+$tm
+               season density n
+season              0       4 3
+density             2       0 3
+season:density      0       0 3
+Res                 1       1 1
+
+$mse
+               Mean square estimates           
+season         "1*Residuals + 12*season"       
+density        "1*Residuals + 6*density"       
+season:density "1*Residuals + 3*season:density"
+Residuals      "1*Residuals"                   
+
+$f.versus
+                    Numerator Denominator
+season                 season   Residuals
+density               density   Residuals
+season:density season:density   Residuals
+
+
+> C.test(m_eggs)
+
+	Cochran test of homogeneity of variances
+
+data:  m_eggs
+C = 0.26461, n = 3, k = 8, p-value = 0.9305
+alternative hypothesis: Group spring.30 has outlying variance
+sample estimates:
+ spring.8  summer.8 spring.15 summer.15 spring.30 summer.30 spring.45 summer.45 
+   0.3490    0.0990    0.1440    0.2324    0.3856    0.1693    0.0361    0.0420 
+
+
+> tab_eggs <- gad(m_eggs)
+
+> tab_eggs
+$anova
+Analysis of Variance Table
+
+Response: egg_masses
+               Df Sum Sq Mean Sq F value    Pr(>F)    
+season          1 3.2502  3.2502 17.8419 0.0006453 ***
+density         3 5.2841  1.7614  9.6691 0.0007041 ***
+season:density  3 0.1647  0.0549  0.3014 0.8239545    
+Residuals      16 2.9146  0.1822                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> snk.test(m_eggs, term = "density", anova.tab = tab_eggs)
+Student-Newman-Keuls test for: density 
+
+Standard error = 0.1742
+Df = 16 
+              45      30     15     8    
+Rank order:   1       2      3      4    
+Ranked means: 0.8962  1.1883 1.6775 2.125
+Comparisons:                             
+1             4-1 ***                    
+2             3-1 *   4-2 **             
+3             2-1 ns  3-2 ns 4-3 ns      
+Summary: 45 = 30 = 15 = 8 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> open_png("figures/limpet_eggs_interaction.png")
+
+> interaction_means(eggs$egg_masses, eggs$density, eggs$season, 
++     cols = PAL[c("blue", "orange")], ylim = c(0, 3), xlab = "Adult density (limpets per enclosure)", 
++     ylab = "Egg masses per limpet", main = expression("Egg production by season and density (mean" %+-% 
++         "SE)"))
+
+> dev.off()
+null device 
+          1 
+
+> growth <- read.csv("data/growth_feed_sex.csv", stringsAsFactors = TRUE)
+
+> growth$feed <- as.fixed(growth$feed)
+
+> growth$sex <- as.fixed(growth$sex)
+
+> m_growth <- lm(growth_mm_day ~ feed + sex + feed:sex, 
++     data = growth)
+
+> estimates(m_growth)
+$tm
+         feed sex n
+feed        0   2 5
+sex         3   0 5
+feed:sex    0   0 5
+Res         1   1 1
+
+$mse
+          Mean square estimates     
+feed      "1*Residuals + 10*feed"   
+sex       "1*Residuals + 15*sex"    
+feed:sex  "1*Residuals + 5*feed:sex"
+Residuals "1*Residuals"             
+
+$f.versus
+         Numerator Denominator
+feed          feed   Residuals
+sex            sex   Residuals
+feed:sex  feed:sex   Residuals
+
+
+> C.test(m_growth)
+
+	Cochran test of homogeneity of variances
+
+data:  m_growth
+C = 0.52182, n = 5, k = 6, p-value = 0.02332
+alternative hypothesis: Group a1.male has outlying variance
+sample estimates:
+  a1.male a1.female   a2.male a2.female   a3.male a3.female 
+     27.5       4.8       9.3       4.3       2.5       4.3 
+
+
+> C.test(lm(sqrt(growth_mm_day) ~ feed + sex + feed:sex, 
++     data = growth))
+
+	Cochran test of homogeneity of variances
+
+data:  lm(sqrt(growth_mm_day) ~ feed + sex + feed:sex, data = growth)
+C = 0.58734, n = 5, k = 6, p-value = 0.005905
+alternative hypothesis: Group a1.male has outlying variance
+sample estimates:
+  a1.male a1.female   a2.male a2.female   a3.male a3.female 
+   0.3840    0.0390    0.0955    0.0378    0.0392    0.0582 
+
+
+> C.test(lm(log(growth_mm_day) ~ feed + sex + feed:sex, 
++     data = growth))
+
+	Cochran test of homogeneity of variances
+
+data:  lm(log(growth_mm_day) ~ feed + sex + feed:sex, data = growth)
+C = 0.64399, n = 5, k = 6, p-value = 0.00146
+alternative hypothesis: Group a1.male has outlying variance
+sample estimates:
+  a1.male a1.female   a2.male a2.female   a3.male a3.female 
+   0.0881    0.0051    0.0158    0.0053    0.0099    0.0126 
+
+
+> tab_growth <- gad(m_growth)
+
+> tab_growth
+$anova
+Analysis of Variance Table
+
+Response: growth_mm_day
+          Df Sum Sq Mean Sq F value    Pr(>F)    
+feed       2 538.07 269.033 30.6300 2.475e-07 ***
+sex        1 264.03 264.033 30.0607 1.231e-05 ***
+feed:sex   2 115.27  57.633  6.5617  0.005331 ** 
+Residuals 24 210.80   8.783                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> snk.test(m_growth, term = "feed:sex", among = "feed", 
++     within = "sex", anova.tab = tab_growth)
+Student-Newman-Keuls test for: feed:sex 
+
+Standard error = 1.3254
+Df = 24 
+
+Pairwise comparisons among levels of: feed 
+within each level of: sex 
+
+Level: male 
+              a3      a1    a2  
+Rank order:   1       2     3   
+Ranked means: 16      20    24.6
+Comparisons:                    
+1             3-1 ***           
+2             2-1 *   3-2 *     
+Summary: a3 < a1 < a2 
+
+Level: female 
+              a3      a2     a1  
+Rank order:   1       2      3   
+Ranked means: 18.4    28.6   31.4
+Comparisons:                     
+1             3-1 ***            
+2             2-1 *** 3-2 ns     
+Summary: a3 < a2 = a1 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> snk.test(m_growth, term = "feed:sex", among = "sex", 
++     within = "feed", anova.tab = tab_growth)
+Student-Newman-Keuls test for: feed:sex 
+
+Standard error = 1.3254
+Df = 24 
+
+Pairwise comparisons among levels of: sex 
+within each level of: feed 
+
+Level: a1 
+              male    female
+Rank order:   1       2     
+Ranked means: 20      31.4  
+Comparisons:                
+1             2-1 ***       
+Summary: male < female 
+
+Level: a2 
+              male  female
+Rank order:   1     2     
+Ranked means: 24.6  28.6  
+Comparisons:              
+1             2-1 *       
+Summary: male < female 
+
+Level: a3 
+              male   female
+Rank order:   1      2     
+Ranked means: 16     18.4  
+Comparisons:               
+1             2-1 ns       
+Summary: male = female 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> open_png("figures/growth_feed_sex_interaction.png")
+
+> interaction_means(growth$growth_mm_day, growth$feed, 
++     growth$sex, cols = PAL[c("blue", "orange")], ylim = c(0, 
++         35), xlab = "Feed", ylab = expression("Growth (mm " * 
++         day^-1 * ")"), main = expression("Growth by feed and sex (mean" %+-% 
++         "SE)"), legend_pos = "bot ..." ... [TRUNCATED] 
+
+> dev.off()
+null device 
+          1 
+
+> abund <- read.csv("data/abundance_site_date.csv", 
++     stringsAsFactors = TRUE)
+
+> abund$site <- as.fixed(abund$site)
+
+> abund$date <- as.random(abund$date)
+
+> m_sp1 <- lm(species1 ~ site + date + site:date, data = abund)
+
+> estimates(m_sp1)
+$tm
+          site date n
+site         0    2 5
+date         2    1 5
+site:date    0    1 5
+Res          1    1 1
+
+$mse
+          Mean square estimates                
+site      "1*Residuals + 5*site:date + 10*site"
+date      "1*Residuals + 10*date"              
+site:date "1*Residuals + 5*site:date"          
+Residuals "1*Residuals"                        
+
+$f.versus
+          Numerator Denominator
+site           site   site:date
+date           date   Residuals
+site:date site:date   Residuals
+
+
+> C.test(m_sp1)
+
+	Cochran test of homogeneity of variances
+
+data:  m_sp1
+C = 0.36058, n = 5, k = 4, p-value = 0.8649
+alternative hypothesis: Group B.I has outlying variance
+sample estimates:
+   A.I   A.II    B.I   B.II 
+ 444.5  762.2 1003.3  572.5 
+
+
+> tab_sp1 <- gad(m_sp1)
+
+> tab_sp1
+$anova
+Analysis of Variance Table
+
+Response: species1
+          Df  Sum Sq Mean Sq F value Pr(>F)
+site       1   871.2  871.20  1.8906 0.4003
+date       1   520.2  520.20  0.7478 0.3999
+site:date  1   460.8  460.80  0.6624 0.4277
+Residuals 16 11130.0  695.62               
+
+
+> pooling(m_sp1, term = "site:date", method = "pool", 
++     anova.tab = tab_sp1)
+$pool.table
+        Term        Pooled with
+Pooled1 "site:date" "Residuals"
+
+$mse
+        Mean square estimates
+site    "1*Pooled1 + 10*site"
+date    "1*Pooled1 + 10*date"
+Pooled1 "1*Pooled1"          
+
+$f.versus
+     Numerator Denominator
+site      site     Pooled1
+date      date     Pooled1
+
+$anova
+Analysis of Variance Table
+
+Response: species1
+        Df  Sum Sq Mean Sq F value Pr(>F)
+site     1   871.2  871.20  1.2778 0.2750
+date     1   520.2  520.20  0.7630 0.3953
+Pooled1 17 11590.8  681.81               
+
+
+> m_sp2 <- lm(species2 ~ site + date + site:date, data = abund)
+
+> C.test(m_sp2)
+
+	Cochran test of homogeneity of variances
+
+data:  m_sp2
+C = 0.3676, n = 5, k = 4, p-value = 0.8202
+alternative hypothesis: Group A.I has outlying variance
+sample estimates:
+   A.I   A.II    B.I   B.II 
+1446.7  515.3 1107.7  865.8 
+
+
+> gad(m_sp2)
+$anova
+Analysis of Variance Table
+
+Response: species2
+          Df  Sum Sq Mean Sq F value  Pr(>F)  
+site       1  1513.8  1513.8  2.2500 0.37433  
+date       1  3699.2  3699.2  3.7598 0.07034 .
+site:date  1   672.8   672.8  0.6838 0.42043  
+Residuals 16 15742.0   983.9                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> open_png("figures/abundance_site_date.png", width = 2200, 
++     height = 1100)
+
+> par(mfrow = c(1, 2))
+
+> par(mfrow = c(1, 2), mar = c(5.4, 4.8, 2.8, 1.2))
+
+> cols4 <- PAL[c("blue", "orange", "blue", "orange")]
+
+> for (sp in c("species1", "species2")) {
++     box_points(as.formula(paste(sp, "~ site + date")), abund, 
++         col = cols4, names = c("Site A", "Site B", "Site A", 
++             "Site B"), ylim = c(0, 100), ylab = expression("Individuals " * 
++             m^-2), main = sub("species", "Specie ..." ... [TRUNCATED] 
+
+> dev.off()
+null device 
+          1 

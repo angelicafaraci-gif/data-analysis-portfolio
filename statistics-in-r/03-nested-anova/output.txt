@@ -1,0 +1,356 @@
+
+> library(GAD)
+
+> source("../plot_helpers.R")
+
+> limpets <- read.csv("data/limpets_protection.csv", 
++     stringsAsFactors = TRUE)
+
+> limpets$protection <- as.fixed(limpets$protection)
+
+> limpets$site <- as.random(limpets$site)
+
+> m_lim <- lm(limpets ~ protection + site %in% protection, 
++     data = limpets)
+
+> estimates(m_lim)
+$tm
+                protection site n
+protection               0    2 6
+protection:site          1    1 6
+Res                      1    1 1
+
+$mse
+                Mean square estimates                            
+protection      "1*Residuals + 6*protection:site + 12*protection"
+protection:site "1*Residuals + 6*protection:site"                
+Residuals       "1*Residuals"                                    
+
+$f.versus
+                      Numerator     Denominator
+protection           protection protection:site
+protection:site protection:site       Residuals
+
+
+> C.test(m_lim)
+
+	Cochran test of homogeneity of variances
+
+data:  m_lim
+C = 0.45067, n = 6, k = 4, p-value = 0.3234
+alternative hypothesis: Group P.A has outlying variance
+sample estimates:
+   NP.A    NP.B     P.A     P.B 
+ 7.0667 12.8000 34.5667 22.2667 
+
+
+> tab_lim <- gad(m_lim)
+
+> tab_lim
+$anova
+Analysis of Variance Table
+
+Response: limpets
+                Df Sum Sq Mean Sq F value  Pr(>F)  
+protection       1 117.04 117.042  1.9602 0.29645  
+protection:site  2 119.42  59.708  3.1139 0.06648 .
+Residuals       20 383.50  19.175                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> open_png("figures/limpets_protection.png")
+
+> box_points(limpets ~ site + protection, limpets, col = PAL[c("blue", 
++     "blue", "orange", "orange")], names = c("Site A", "Site B", 
++     "Site A", "Site B"), ylab = "Limpets per sample", main = "Limpets by site and protection level")
+
+> abline(v = 2.5, col = GRID, lty = 2)
+
+> mtext(c("Not protected", "Protected"), side = 1, at = c(1.5, 
++     3.5), line = 2.6, col = INK)
+
+> dev.off()
+null device 
+          1 
+
+> rich <- read.csv("data/richness_exposure.csv")
+
+> rich$exposure <- factor(rich$exposure, levels = c("sheltered", 
++     "intermediate", "exposed"))
+
+> rich$exposure <- as.fixed(rich$exposure)
+
+> rich$area <- as.random(rich$area)
+
+> m_rich <- lm(richness_S ~ exposure + area %in% exposure, 
++     data = rich)
+
+> estimates(m_rich)
+$tm
+              exposure area n
+exposure             0    4 3
+exposure:area        1    1 3
+Res                  1    1 1
+
+$mse
+              Mean square estimates                        
+exposure      "1*Residuals + 3*exposure:area + 12*exposure"
+exposure:area "1*Residuals + 3*exposure:area"              
+Residuals     "1*Residuals"                                
+
+$f.versus
+                  Numerator   Denominator
+exposure           exposure exposure:area
+exposure:area exposure:area     Residuals
+
+
+> C.test(m_rich)
+
+	Cochran test of homogeneity of variances
+
+data:  m_rich
+C = 0.17615, n = 3, k = 12, p-value = 1
+alternative hypothesis: Group exposed.b has outlying variance
+sample estimates:
+   sheltered.a    sheltered.b    sheltered.c    sheltered.d intermediate.a 
+       20.3333        42.3333         9.3333        44.3333        60.3333 
+intermediate.b intermediate.c intermediate.d      exposed.a      exposed.b 
+       49.0000         4.0000        30.3333        25.0000        74.3333 
+     exposed.c      exposed.d 
+        6.3333        56.3333 
+
+
+> tab_rich <- gad(m_rich)
+
+> tab_rich
+$anova
+Analysis of Variance Table
+
+Response: richness_S
+              Df Sum Sq Mean Sq F value  Pr(>F)  
+exposure       2 1478.7  739.36  7.3895 0.01262 *
+exposure:area  9  900.5  100.06  2.8452 0.01966 *
+Residuals     24  844.0   35.17                  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> snk.test(m_rich, term = "exposure", anova.tab = tab_rich)
+Student-Newman-Keuls test for: exposure 
+
+Standard error = 2.8876
+Df = 9 
+              sheltered exposed intermediate
+Rank order:   1         2       3           
+Ranked means: 22.4167   23.0833 36.3333     
+Comparisons:                                
+1             3-1 *                         
+2             2-1 ns    3-2 *               
+Summary: sheltered = exposed < intermediate 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> open_png("figures/richness_exposure.png", width = 2000, 
++     height = 1100)
+
+> par(mar = c(5.4, 4.8, 2.8, 1.2))
+
+> box_points(richness_S ~ area + exposure, rich, col = rep(PAL[c("blue", 
++     "orange", "aqua")], each = 4), names = rep(c("a", "b", "c", 
++     "d"), 3), ylim = c(0, 60), ylab = "Species richness (S)", 
++     main = "Species richness by area and wave exposure")
+
+> abline(v = c(4.5, 8.5), col = GRID, lty = 2)
+
+> mtext(c("Sheltered", "Intermediate", "Exposed"), side = 1, 
++     at = c(2.5, 6.5, 10.5), line = 2.6, col = INK)
+
+> dev.off()
+null device 
+          1 
+
+> rubble <- read.csv("data/coral_rubble_control_impact.csv")
+
+> rubble$depth <- factor(rubble$depth, levels = c("6 m", 
++     "12 m", "18 m"))
+
+> rubble$impact <- as.fixed(rubble$impact)
+
+> rubble$depth <- as.fixed(rubble$depth)
+
+> rubble$site <- as.random(rubble$site)
+
+> f_rubble <- ~impact + depth + impact:depth + site %in% 
++     impact + depth:(site %in% impact)
+
+> m_rub <- lm(update(f_rubble, coral_rubble_pct ~ .), 
++     data = rubble)
+
+> estimates(m_rub)
+$tm
+                  impact depth site n
+impact                 0     3    4 5
+depth                  2     0    4 5
+impact:depth           0     0    4 5
+impact:site            1     3    1 5
+impact:depth:site      1     0    1 5
+Res                    1     1    1 1
+
+$mse
+                  Mean square estimates                                
+impact            "1*Residuals + 15*impact:site + 60*impact"           
+depth             "1*Residuals + 5*impact:depth:site + 40*depth"       
+impact:depth      "1*Residuals + 5*impact:depth:site + 20*impact:depth"
+impact:site       "1*Residuals + 15*impact:site"                       
+impact:depth:site "1*Residuals + 5*impact:depth:site"                  
+Residuals         "1*Residuals"                                        
+
+$f.versus
+                          Numerator       Denominator
+impact                       impact       impact:site
+depth                         depth impact:depth:site
+impact:depth           impact:depth impact:depth:site
+impact:site             impact:site         Residuals
+impact:depth:site impact:depth:site         Residuals
+
+
+> C.test(m_rub)
+
+	Cochran test of homogeneity of variances
+
+data:  m_rub
+C = 0.43906, n = 5, k = 24, p-value = 1.434e-09
+alternative hypothesis: Group Impact.12 m.C has outlying variance
+sample estimates:
+ Control.6 m.A  Control.6 m.B  Control.6 m.C  Control.6 m.D Control.12 m.A 
+        0.5283         0.3920         0.7625         0.4568         0.2509 
+Control.12 m.B Control.12 m.C Control.12 m.D Control.18 m.A Control.18 m.B 
+        0.1549         0.0673         0.4181         0.7805         0.0000 
+Control.18 m.C Control.18 m.D   Impact.6 m.A   Impact.6 m.B   Impact.6 m.C 
+        0.1970         0.7683       271.1094        41.4527       928.1605 
+  Impact.6 m.D  Impact.12 m.A  Impact.12 m.B  Impact.12 m.C  Impact.12 m.D 
+      106.1797       185.4248       117.6963      1643.0407       400.1746 
+ Impact.18 m.A  Impact.18 m.B  Impact.18 m.C  Impact.18 m.D 
+        4.4704        16.6387        13.2485         9.8143 
+
+
+> rubble$rubble_t <- rubble$coral_rubble_pct^0.2
+
+> m_rub_t <- lm(update(f_rubble, rubble_t ~ .), data = rubble)
+
+> C.test(m_rub_t)
+
+	Cochran test of homogeneity of variances
+
+data:  m_rub_t
+C = 0.16157, n = 5, k = 24, p-value = 0.06103
+alternative hypothesis: Group Impact.12 m.C has outlying variance
+sample estimates:
+ Control.6 m.A  Control.6 m.B  Control.6 m.C  Control.6 m.D Control.12 m.A 
+        0.2952         0.2288         0.2917         0.2902         0.2093 
+Control.12 m.B Control.12 m.C Control.12 m.D Control.18 m.A Control.18 m.B 
+        0.1900         0.1608         0.3177         0.3336         0.0000 
+Control.18 m.C Control.18 m.D   Impact.6 m.A   Impact.6 m.B   Impact.6 m.C 
+        0.2722         0.2618         0.1072         0.0166         0.0701 
+  Impact.6 m.D  Impact.12 m.A  Impact.12 m.B  Impact.12 m.C  Impact.12 m.D 
+        0.6229         0.6653         0.0435         1.0394         0.0681 
+ Impact.18 m.A  Impact.18 m.B  Impact.18 m.C  Impact.18 m.D 
+        0.3075         0.0453         0.0170         0.5785 
+
+
+> tab_rub <- gad(m_rub_t)
+
+> tab_rub
+$anova
+Analysis of Variance Table
+
+Response: rubble_t
+                  Df Sum Sq Mean Sq F value    Pr(>F)    
+impact             1 46.624  46.624 91.2452 7.516e-05 ***
+depth              2  2.361   1.181  5.5293   0.01987 *  
+impact:depth       2  2.116   1.058  4.9564   0.02697 *  
+impact:site        6  3.066   0.511  1.9064   0.08751 .  
+impact:depth:site 12  2.562   0.214  0.7966   0.65296    
+Residuals         96 25.731   0.268                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+> snk.test(m_rub_t, term = "impact:depth", among = "impact", 
++     within = "depth", anova.tab = tab_rub)
+Student-Newman-Keuls test for: impact:depth 
+
+Standard error = 0.1033
+Df = 12 
+
+Pairwise comparisons among levels of: impact 
+within each level of: depth 
+
+Level: 6 m 
+              Control Impact
+Rank order:   1       2     
+Ranked means: 0.3927  1.7647
+Comparisons:                
+1             2-1 ***       
+Summary: Control < Impact 
+
+Level: 12 m 
+              Control Impact
+Rank order:   1       2     
+Ranked means: 0.2476  1.7383
+Comparisons:                
+1             2-1 ***       
+Summary: Control < Impact 
+
+Level: 18 m 
+              Control Impact
+Rank order:   1       2     
+Ranked means: 0.309   1.1863
+Comparisons:                
+1             2-1 ***       
+Summary: Control < Impact 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> snk.test(m_rub_t, term = "impact:depth", among = "depth", 
++     within = "impact", anova.tab = tab_rub)
+Student-Newman-Keuls test for: impact:depth 
+
+Standard error = 0.1033
+Df = 12 
+
+Pairwise comparisons among levels of: depth 
+within each level of: impact 
+
+Level: Control 
+              12 m   18 m  6 m   
+Rank order:   1      2     3     
+Ranked means: 0.2476 0.309 0.3927
+Comparisons:                     
+1             3-1 ns             
+2             2-1 x  3-2 x       
+Summary: 12 m = 18 m = 6 m 
+
+Level: Impact 
+              18 m   12 m   6 m   
+Rank order:   1      2      3     
+Ranked means: 1.1863 1.7383 1.7647
+Comparisons:                      
+1             3-1 **              
+2             2-1 ** 3-2 ns       
+Summary: 18 m < 12 m = 6 m 
+---
+Signif. codes: ***p < 0.001; **p < 0.01; *p < 0.05; ns, p > 0.05
+
+> open_png("figures/coral_rubble_control_impact.png")
+
+> interaction_means(rubble$coral_rubble_pct, rubble$depth, 
++     rubble$impact, cols = PAL[c("blue", "orange")], ylim = c(0, 
++         40), xlab = "Depth", ylab = "Coral rubble cover (%)", 
++     main = expression("Coral rubble, control vs impact (mean" %+-% 
++         "SE)"))
+
+> dev.off()
+null device 
+          1 
