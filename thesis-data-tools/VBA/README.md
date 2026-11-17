@@ -1,6 +1,6 @@
 # Excel VBA macros for metabarcoding tables
 
-Four VBA modules that take the output of a taxonomic classifier and turn it into clean tables ready for analysis. They work on whole sheets in memory (arrays and dictionaries instead of cell-by-cell loops), so tables with tens of thousands of ASVs are processed in seconds.
+Five VBA modules that take the output of a taxonomic classifier and turn it into clean tables ready for analysis. They work on whole sheets in memory (arrays and dictionaries instead of cell-by-cell loops), so tables with tens of thousands of ASVs are processed in seconds.
 
 Written together with Cosmin Haja. The examples below use invented values.
 
@@ -8,6 +8,7 @@ Written together with Cosmin Haja. The examples below use invented values.
 
 | Step | Module | Macro | What it does |
 |---|---|---|---|
+| 0 | [`00_SplitAndReverseLineage.bas`](00_SplitAndReverseLineage.bas) | `SplitAndReverseLineage` | 18S only: splits the comma-separated lineage exported by the pipeline and puts it in order from the most general to the most specific name, ready for [`worms_18s.py`](../python/worms_18s.py) |
 | 1 | [`01_FormatTaxonomy.bas`](01_FormatTaxonomy.bas) | `AlignTaxonomyTriplets`, then `CleanTaxonomyTable` | Aligns the classifier output so each taxonomic rank is in its own column, then writes a tidy table |
 | 2a | [`02_FilterNegativeControls.bas`](02_FilterNegativeControls.bas) | `FilterNegativeControls` | Simple version: copies to a new sheet only the ASVs with zero reads in the negative controls |
 | 2b | [`03_RemoveContaminants.bas`](03_RemoveContaminants.bas) | `RemoveContaminantsAllSheets` | Complete version, on every sheet: removes ASVs found in the controls and ASVs of contaminant taxa (human, domestic animals) |
