@@ -53,3 +53,20 @@ rsconnect/
 src/*.o
 src/*.so
 src/*.dll
+
+# Python
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+
+# Excel e Office: file temporanei e cartelle di lavoro con dati
+~$*
+*.xlsx
+*.xlsm
+
+# Dati veri, solo sul tuo PC
+private-data/
+
+# Sistema
+.DS_Store
+Thumbs.db
